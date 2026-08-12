@@ -1,17 +1,25 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import CourseModal from "@/components/CourseModal";
 import QuestionModal from "@/components/QuestionModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import QuestionCard from "@/components/QuestionCard";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/lib/api";
-import { IconPlus, IconEdit, IconTrash, IconArrowRight, IconHelp } from "@/components/icons";
+import {
+  IconEdit,
+  IconTrash,
+  IconArrowRight,
+  IconPlay,
+  IconFolder,
+  IconPlus,
+  IconHelp,
+} from "@/components/icons";
+import { useRouter } from "next/navigation";
 
 const fetcher = (url) => api.get(url);
 
@@ -23,7 +31,12 @@ export default function CourseDetailPage({ params }) {
     `/api/courses/${id}`,
     fetcher
   );
-  const { data: questions, isLoading: questionsLoading, mutate: mutateQuestions } = useSWR(
+  const {
+    data: videoData,
+    isLoading: videosLoading,
+    mutate: mutateVideos,
+  } = useSWR(`/api/courses/${id}/videos`, fetcher);
+  const { data: questions, mutate: mutateQuestions } = useSWR(
     `/api/questions?course=${id}`,
     fetcher
   );
@@ -32,10 +45,23 @@ export default function CourseDetailPage({ params }) {
   const [deletingCourse, setDeletingCourse] = useState(false);
   const [courseDeleteLoading, setCourseDeleteLoading] = useState(false);
 
-  const [questionModalOpen, setQuestionModalOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-  const [deletingQuestion, setDeletingQuestion] = useState(null);
-  const [questionDeleteLoading, setQuestionDeleteLoading] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
+  const [deletingNote, setDeletingNote] = useState(null);
+  const [noteDeleteLoading, setNoteDeleteLoading] = useState(false);
+
+  const noteCounts = useMemo(() => {
+    const map = new Map();
+    (questions || []).forEach((q) => map.set(q.video, (map.get(q.video) || 0) + 1));
+    return map;
+  }, [questions]);
+
+  const generalNotes = useMemo(() => (questions || []).filter((q) => !q.video), [questions]);
+
+  const videoCount = useMemo(
+    () => (videoData?.sections || []).reduce((sum, s) => sum + s.videos.length, 0),
+    [videoData]
+  );
 
   async function handleDeleteCourse() {
     setCourseDeleteLoading(true);
@@ -49,27 +75,27 @@ export default function CourseDetailPage({ params }) {
     }
   }
 
-  function openAddQuestion() {
-    setEditingQuestion(null);
-    setQuestionModalOpen(true);
+  function openAddNote() {
+    setEditingNote(null);
+    setNoteModalOpen(true);
   }
 
-  function openEditQuestion(q) {
-    setEditingQuestion(q);
-    setQuestionModalOpen(true);
+  function openEditNote(note) {
+    setEditingNote(note);
+    setNoteModalOpen(true);
   }
 
-  async function handleDeleteQuestion() {
-    setQuestionDeleteLoading(true);
+  async function handleDeleteNote() {
+    setNoteDeleteLoading(true);
     try {
-      await api.del(`/api/questions/${deletingQuestion._id}`);
-      toast.success("Question deleted");
+      await api.del(`/api/questions/${deletingNote._id}`);
+      toast.success("Note deleted");
       mutateQuestions();
-      setDeletingQuestion(null);
+      setDeletingNote(null);
     } catch (err) {
       toast.error(err.message);
     } finally {
-      setQuestionDeleteLoading(false);
+      setNoteDeleteLoading(false);
     }
   }
 
@@ -112,35 +138,93 @@ export default function CourseDetailPage({ params }) {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-lg text-cream-100">
-          Questions{" "}
-          <span className="text-cream-500 text-sm font-sans">({questions?.length || 0})</span>
+          Videos <span className="text-cream-500 text-sm font-sans">({videoCount})</span>
         </h2>
-        <button className="btn btn-primary" onClick={openAddQuestion}>
-          <IconPlus width={16} height={16} /> Add question
-        </button>
       </div>
 
-      {questionsLoading ? (
+      {videosLoading ? (
         <p className="text-cream-500 text-sm">Loading…</p>
-      ) : questions.length === 0 ? (
-        <div className="card p-12 text-center">
-          <IconHelp width={28} height={28} className="text-cream-500 mx-auto mb-3" />
-          <p className="text-cream-300">No questions yet for this course.</p>
-          <button className="btn btn-primary mt-5" onClick={openAddQuestion}>
-            Add the first question
+      ) : videoCount === 0 ? (
+        <div className="card p-8 text-center">
+          <IconFolder width={28} height={28} className="text-cream-500 mx-auto mb-3" />
+          <p className="text-cream-300">No videos found yet.</p>
+          <p className="text-cream-500 text-sm mt-2">
+            Drop video files into{" "}
+            <code className="text-gold-300">public/courses/{course.folder}/</code> (subfolders
+            are grouped as sections), then refresh.
+          </p>
+          <button className="btn btn-ghost mt-5" onClick={() => mutateVideos()}>
+            Refresh
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {questions.map((q, i) => (
-            <QuestionCard
-              key={q._id}
-              question={q}
-              index={i}
-              onEdit={openEditQuestion}
-              onDelete={setDeletingQuestion}
-            />
+        <div className="space-y-6">
+          {videoData.sections.map((section) => (
+            <div key={section.name || "__root"}>
+              {section.name && (
+                <h3 className="text-cream-300 text-sm font-medium mb-2 flex items-center gap-1.5">
+                  <IconFolder width={14} height={14} className="text-cream-500" />
+                  {section.name}
+                </h3>
+              )}
+              <div className="space-y-2">
+                {section.videos.map((video) => (
+                  <Link
+                    key={video.path}
+                    href={`/dashboard/courses/${id}/watch?v=${encodeURIComponent(video.path)}`}
+                    className="card flex items-center gap-3 px-4 py-3 hover:border-gold-400/30 transition-colors"
+                  >
+                    <span className="w-8 h-8 rounded-full bg-gold-400/10 text-gold-300 flex items-center justify-center shrink-0">
+                      <IconPlay width={14} height={14} />
+                    </span>
+                    <span className="flex-1 min-w-0 truncate text-cream-100">{video.name}</span>
+                    {noteCounts.get(video.path) > 0 && (
+                      <span className="badge shrink-0">
+                        {noteCounts.get(video.path)} note
+                        {noteCounts.get(video.path) === 1 ? "" : "s"}
+                      </span>
+                    )}
+                    <IconArrowRight width={13} height={13} className="text-cream-500 shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
+        </div>
+      )}
+
+      {!videosLoading && videoCount === 0 && (
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg text-cream-100">
+              Notes <span className="text-cream-500 text-sm font-sans">({generalNotes.length})</span>
+            </h2>
+            <button className="btn btn-primary" onClick={openAddNote}>
+              <IconPlus width={16} height={16} /> Add note
+            </button>
+          </div>
+
+          {generalNotes.length === 0 ? (
+            <div className="card p-12 text-center">
+              <IconHelp width={28} height={28} className="text-cream-500 mx-auto mb-3" />
+              <p className="text-cream-300">No notes yet for this course.</p>
+              <button className="btn btn-primary mt-5" onClick={openAddNote}>
+                Add the first note
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {generalNotes.map((note, i) => (
+                <QuestionCard
+                  key={note._id}
+                  question={note}
+                  index={i}
+                  onEdit={openEditNote}
+                  onDelete={setDeletingNote}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -152,10 +236,11 @@ export default function CourseDetailPage({ params }) {
       />
 
       <QuestionModal
-        open={questionModalOpen}
-        onClose={() => setQuestionModalOpen(false)}
+        open={noteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
         courseId={id}
-        question={editingQuestion}
+        courseFolder={course.folder}
+        question={editingNote}
         onSaved={mutateQuestions}
       />
 
@@ -164,17 +249,17 @@ export default function CourseDetailPage({ params }) {
         onClose={() => setDeletingCourse(false)}
         onConfirm={handleDeleteCourse}
         title="Delete course"
-        description={`Delete "${course.title}"? All ${questions?.length || 0} question(s) will be removed too.`}
+        description={`Delete "${course.title}"? All of its notes will be removed too (uploaded video files are kept on disk).`}
         loading={courseDeleteLoading}
       />
 
       <ConfirmDialog
-        open={Boolean(deletingQuestion)}
-        onClose={() => setDeletingQuestion(null)}
-        onConfirm={handleDeleteQuestion}
-        title="Delete question"
-        description="This question and its answer will be permanently removed."
-        loading={questionDeleteLoading}
+        open={Boolean(deletingNote)}
+        onClose={() => setDeletingNote(null)}
+        onConfirm={handleDeleteNote}
+        title="Delete note"
+        description="This note and its answer will be permanently removed."
+        loading={noteDeleteLoading}
       />
     </div>
   );

@@ -6,12 +6,18 @@ import useSWR from "swr";
 import PageHeader from "@/components/PageHeader";
 import QuestionCard from "@/components/QuestionCard";
 import { api } from "@/lib/api";
+import { formatTime } from "@/lib/time";
 import { IconSearch, IconHelp, IconArrowRight } from "@/components/icons";
 
 const fetcher = (url) => api.get(url);
 
 function plainText(html) {
   return (html || "").replace(/<[^>]+>/g, " ").toLowerCase();
+}
+
+function videoLabel(path) {
+  if (!path) return "General notes";
+  return path.replace(/\.[^./]+$/, "").split("/").join(" › ");
 }
 
 export default function QuestionsExplorerPage() {
@@ -41,19 +47,28 @@ export default function QuestionsExplorerPage() {
       const catEntry = byCategory.get(cat._id);
       const course = q.course;
       if (!catEntry.courses.has(course._id)) {
-        catEntry.courses.set(course._id, { course, questions: [] });
+        catEntry.courses.set(course._id, { course, videos: new Map() });
       }
-      catEntry.courses.get(course._id).questions.push(q);
+      const courseEntry = catEntry.courses.get(course._id);
+      if (!courseEntry.videos.has(q.video)) courseEntry.videos.set(q.video, []);
+      courseEntry.videos.get(q.video).push(q);
     }
 
     return Array.from(byCategory.values()).map((c) => ({
       ...c,
-      courses: Array.from(c.courses.values()),
+      courses: Array.from(c.courses.values()).map((co) => ({
+        ...co,
+        videos: Array.from(co.videos.entries()).map(([video, notes]) => ({
+          video,
+          notes: notes.slice().sort((a, b) => a.timestamp - b.timestamp),
+        })),
+      })),
     }));
   }, [questions, search, categorySlug]);
 
   const total = grouped.reduce(
-    (sum, c) => sum + c.courses.reduce((s, co) => s + co.questions.length, 0),
+    (sum, c) =>
+      sum + c.courses.reduce((s, co) => s + co.videos.reduce((n, v) => n + v.notes.length, 0), 0),
     0
   );
 
@@ -61,8 +76,8 @@ export default function QuestionsExplorerPage() {
     <div>
       <PageHeader
         eyebrow="Explore"
-        title="All questions"
-        description="Every question in the bank, grouped by category and course."
+        title="All notes"
+        description="Every timestamped note in the bank, grouped by category, course and video."
       />
 
       <div className="flex flex-wrap gap-3 mb-8">
@@ -98,7 +113,7 @@ export default function QuestionsExplorerPage() {
       ) : total === 0 ? (
         <div className="card p-12 text-center">
           <IconHelp width={28} height={28} className="text-cream-500 mx-auto mb-3" />
-          <p className="text-cream-300">No questions match your filters yet.</p>
+          <p className="text-cream-300">No notes match your filters yet.</p>
         </div>
       ) : (
         <div className="space-y-10">
@@ -117,19 +132,46 @@ export default function QuestionsExplorerPage() {
                   <div key={courseEntry.course._id}>
                     <Link
                       href={`/dashboard/courses/${courseEntry.course._id}`}
-                      className="flex items-center gap-1.5 text-sm text-cream-300 hover:text-gold-300 mb-3 group"
+                      className="text-sm text-cream-300 hover:text-gold-300 mb-3 inline-block"
                     >
                       {courseEntry.course.title}
-                      <IconArrowRight
-                        width={12}
-                        height={12}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                      <span className="badge ml-1">{courseEntry.questions.length}</span>
                     </Link>
-                    <div className="space-y-3">
-                      {courseEntry.questions.map((q, i) => (
-                        <QuestionCard key={q._id} question={q} index={i} />
+                    <div className="space-y-5 mt-2">
+                      {courseEntry.videos.map((v) => (
+                        <div key={v.video || "__general"}>
+                          <Link
+                            href={
+                              v.video
+                                ? `/dashboard/courses/${courseEntry.course._id}/watch?v=${encodeURIComponent(
+                                    v.video
+                                  )}`
+                                : `/dashboard/courses/${courseEntry.course._id}`
+                            }
+                            className="flex items-center gap-1.5 text-sm text-cream-500 hover:text-gold-300 mb-2 group"
+                          >
+                            {videoLabel(v.video)}
+                            <IconArrowRight
+                              width={11}
+                              height={11}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
+                            <span className="badge ml-1">{v.notes.length}</span>
+                          </Link>
+                          <div className="space-y-3">
+                            {v.notes.map((q, i) => (
+                              <QuestionCard
+                                key={q._id}
+                                question={q}
+                                index={i}
+                                meta={
+                                  <span className="badge mb-1.5 inline-flex">
+                                    {formatTime(q.timestamp)}
+                                  </span>
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>

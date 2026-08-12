@@ -1,8 +1,11 @@
 const express = require("express");
+const fs = require("fs/promises");
+const path = require("path");
 const Course = require("../../models/Course");
 const Category = require("../../models/Category");
 const Question = require("../../models/Question");
 const { makeUniqueSlug } = require("../../lib/slug");
+const { listCourseVideos } = require("../../lib/videos");
 
 const router = express.Router();
 
@@ -46,6 +49,17 @@ router.get("/:id", async (req, res) => {
   res.json({ ...course, questionCount });
 });
 
+// GET /api/courses/:id/videos — scan the course's public folder for videos,
+// grouped into sections by subfolder
+router.get("/:id/videos", async (req, res) => {
+  const course = await Course.findById(req.params.id).lean();
+  if (!course) return res.status(404).json({ error: "Course not found" });
+
+  const folder = course.folder || course.slug;
+  const sections = await listCourseVideos(folder);
+  res.json({ folder, sections });
+});
+
 // POST /api/courses — create
 router.post("/", async (req, res) => {
   const { title, description = "", category } = req.body || {};
@@ -60,11 +74,14 @@ router.post("/", async (req, res) => {
   if (!categoryDoc) return res.status(400).json({ error: "Invalid category" });
 
   const slug = await makeUniqueSlug(Course, title);
+  await fs.mkdir(path.join(process.cwd(), "public", "courses", slug), { recursive: true });
+
   const course = await Course.create({
     title: title.trim(),
     slug,
     description,
     category,
+    folder: slug,
   });
 
   res.status(201).json(await course.populate("category"));
@@ -75,6 +92,15 @@ router.put("/:id", async (req, res) => {
   const { title, description, category } = req.body || {};
   const course = await Course.findById(req.params.id);
   if (!course) return res.status(404).json({ error: "Course not found" });
+
+  // Videos are uploaded manually into this folder — keep it fixed even if the
+  // title/slug changes later, so renaming a course never orphans its videos.
+  if (!course.folder) {
+    course.folder = course.slug;
+    await fs.mkdir(path.join(process.cwd(), "public", "courses", course.folder), {
+      recursive: true,
+    });
+  }
 
   if (title && title.trim() && title.trim() !== course.title) {
     course.title = title.trim();

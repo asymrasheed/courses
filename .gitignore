@@ -43,3 +43,9 @@ next-env.d.ts
 
 # claude
 .claude/settings.local.json
+
+# course videos (uploaded manually into public/courses/<course-folder>/, not committed)
+/public/courses/
+
+# rich-text editor image uploads (public/uploads/<course-folder>/, not committed)
+/public/uploads/

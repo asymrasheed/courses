@@ -11,6 +11,9 @@ const CourseSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    // Folder under /public where videos for this course are uploaded.
+    // Fixed at creation time — renaming the course must not orphan uploaded videos.
+    folder: { type: String, required: true },
   },
   { timestamps: true }
 );

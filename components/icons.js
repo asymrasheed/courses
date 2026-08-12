@@ -106,6 +106,31 @@ export function IconArrowRight(props) {
   );
 }
 
+export function IconPlay(props) {
+  return (
+    <svg {...base(props)}>
+      <path d="M7.5 4.8v14.4c0 .8.9 1.3 1.6.9l11.4-7.2c.7-.4.7-1.4 0-1.8L9.1 3.9c-.7-.4-1.6.1-1.6.9Z" />
+    </svg>
+  );
+}
+
+export function IconClock(props) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7v5.3l3.5 2" />
+    </svg>
+  );
+}
+
+export function IconFolder(props) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 6.5c0-.8.7-1.5 1.5-1.5h3.6c.4 0 .8.2 1.1.5l1.2 1.3c.3.3.7.5 1.1.5h6c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-13c-.8 0-1.5-.7-1.5-1.5Z" />
+    </svg>
+  );
+}
+
 export function IconX(props) {
   return (
     <svg {...base(props)}>
