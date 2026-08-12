@@ -49,15 +49,15 @@ router.get("/:id", async (req, res) => {
   res.json({ ...course, questionCount });
 });
 
-// GET /api/courses/:id/videos — scan the course's public folder for videos,
-// grouped into sections by subfolder
+// GET /api/courses/:id/videos — scan the course's public folder and return it
+// as a folder tree mirroring the real directory structure
 router.get("/:id/videos", async (req, res) => {
   const course = await Course.findById(req.params.id).lean();
   if (!course) return res.status(404).json({ error: "Course not found" });
 
   const folder = course.folder || course.slug;
-  const sections = await listCourseVideos(folder);
-  res.json({ folder, sections });
+  const tree = await listCourseVideos(folder);
+  res.json({ folder, tree });
 });
 
 // POST /api/courses — create

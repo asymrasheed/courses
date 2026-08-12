@@ -8,17 +8,11 @@ import PageHeader from "@/components/PageHeader";
 import CourseModal from "@/components/CourseModal";
 import QuestionModal from "@/components/QuestionModal";
 import QuestionCard from "@/components/QuestionCard";
+import VideoFolderTree from "@/components/VideoFolderTree";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/lib/api";
-import {
-  IconEdit,
-  IconTrash,
-  IconArrowRight,
-  IconPlay,
-  IconFolder,
-  IconPlus,
-  IconHelp,
-} from "@/components/icons";
+import { countVideos } from "@/lib/videoTree";
+import { IconEdit, IconTrash, IconArrowRight, IconFolder, IconPlus, IconHelp } from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 const fetcher = (url) => api.get(url);
@@ -58,10 +52,7 @@ export default function CourseDetailPage({ params }) {
 
   const generalNotes = useMemo(() => (questions || []).filter((q) => !q.video), [questions]);
 
-  const videoCount = useMemo(
-    () => (videoData?.sections || []).reduce((sum, s) => sum + s.videos.length, 0),
-    [videoData]
-  );
+  const videoCount = videoData?.tree ? countVideos(videoData.tree) : 0;
 
   async function handleDeleteCourse() {
     setCourseDeleteLoading(true);
@@ -151,55 +142,32 @@ export default function CourseDetailPage({ params }) {
           <p className="text-cream-500 text-sm mt-2">
             Drop video files into{" "}
             <code className="text-gold-300">public/courses/{course.folder}/</code> (subfolders
-            are grouped as sections), then refresh.
+            are welcome), then refresh.
           </p>
           <button className="btn btn-ghost mt-5" onClick={() => mutateVideos()}>
             Refresh
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
-          {videoData.sections.map((section) => (
-            <div key={section.name || "__root"}>
-              {section.name && (
-                <h3 className="text-cream-300 text-sm font-medium mb-2 flex items-center gap-1.5">
-                  <IconFolder width={14} height={14} className="text-cream-500" />
-                  {section.name}
-                </h3>
-              )}
-              <div className="space-y-2">
-                {section.videos.map((video) => (
-                  <Link
-                    key={video.path}
-                    href={`/dashboard/courses/${id}/watch?v=${encodeURIComponent(video.path)}`}
-                    className="card flex items-center gap-3 px-4 py-3 hover:border-gold-400/30 transition-colors"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-gold-400/10 text-gold-300 flex items-center justify-center shrink-0">
-                      <IconPlay width={14} height={14} />
-                    </span>
-                    <span className="flex-1 min-w-0 truncate text-cream-100">{video.name}</span>
-                    {noteCounts.get(video.path) > 0 && (
-                      <span className="badge shrink-0">
-                        {noteCounts.get(video.path)} note
-                        {noteCounts.get(video.path) === 1 ? "" : "s"}
-                      </span>
-                    )}
-                    <IconArrowRight width={13} height={13} className="text-cream-500 shrink-0" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <VideoFolderTree tree={videoData.tree} courseId={id} noteCounts={noteCounts} />
       )}
 
-      {!videosLoading && videoCount === 0 && (
+      {!videosLoading && (
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg text-cream-100">
-              Notes <span className="text-cream-500 text-sm font-sans">({generalNotes.length})</span>
-            </h2>
-            <button className="btn btn-primary" onClick={openAddNote}>
+            <div>
+              <h2 className="font-display text-lg text-cream-100">
+                General notes{" "}
+                <span className="text-cream-500 text-sm font-sans">({generalNotes.length})</span>
+              </h2>
+              {videoCount > 0 && (
+                <p className="text-cream-500 text-xs mt-1">
+                  Not tied to a specific video — for notes about the course as a whole. Open a
+                  video to add notes anchored to a timestamp.
+                </p>
+              )}
+            </div>
+            <button className="btn btn-primary shrink-0" onClick={openAddNote}>
               <IconPlus width={16} height={16} /> Add note
             </button>
           </div>

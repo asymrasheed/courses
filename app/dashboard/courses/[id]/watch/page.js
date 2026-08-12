@@ -11,6 +11,7 @@ import QuestionCard from "@/components/QuestionCard";
 import VideoPlayer from "@/components/VideoPlayer";
 import { api } from "@/lib/api";
 import { formatTime } from "@/lib/time";
+import { flattenVideoTree } from "@/lib/videoTree";
 import {
   IconArrowRight,
   IconPlus,
@@ -45,10 +46,8 @@ export default function WatchPage({ params }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const flatVideos = useMemo(() => {
-    if (!videoData) return [];
-    return videoData.sections.flatMap((s) =>
-      s.videos.map((v) => ({ ...v, section: s.name }))
-    );
+    if (!videoData?.tree) return [];
+    return flattenVideoTree(videoData.tree);
   }, [videoData]);
 
   const currentIndex = flatVideos.findIndex((v) => v.path === videoPath);
