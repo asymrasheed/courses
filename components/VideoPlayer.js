@@ -9,7 +9,7 @@ import "@vidstack/react/player/styles/default/layouts/video.css";
 // Vidstack's `storage` prop persists volume/muted/resume-position per key,
 // keyed by the full URL so it can't collide across courses.
 const VideoPlayer = forwardRef(function VideoPlayer(
-  { src, videoKey, onEnded, autoAdvance, onToggleAutoAdvance },
+  { src, videoKey, onEnded, autoAdvance, onToggleAutoAdvance, navOverlay },
   ref
 ) {
   const [error, setError] = useState(false);
@@ -20,20 +20,23 @@ const VideoPlayer = forwardRef(function VideoPlayer(
 
   return (
     <div>
-      <MediaPlayer
-        key={videoKey}
-        ref={ref}
-        src={src}
-        storage={`video-progress:${src}`}
-        playsInline
-        aspectRatio="16/9"
-        className="rounded-xl overflow-hidden bg-black"
-        onEnded={onEnded}
-        onError={() => setError(true)}
-      >
-        <MediaProvider />
-        <DefaultVideoLayout icons={defaultLayoutIcons} />
-      </MediaPlayer>
+      <div className="relative">
+        <MediaPlayer
+          key={videoKey}
+          ref={ref}
+          src={src}
+          storage={`video-progress:${src}`}
+          playsInline
+          aspectRatio="16/9"
+          className="rounded-xl overflow-hidden bg-black"
+          onEnded={onEnded}
+          onError={() => setError(true)}
+        >
+          <MediaProvider />
+          <DefaultVideoLayout icons={defaultLayoutIcons} />
+        </MediaPlayer>
+        {navOverlay}
+      </div>
 
       {error && (
         <p className="text-clay-400 text-xs mt-2">

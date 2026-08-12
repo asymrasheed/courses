@@ -11,8 +11,16 @@ import QuestionCard from "@/components/QuestionCard";
 import VideoFolderTree from "@/components/VideoFolderTree";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { api } from "@/lib/api";
-import { countVideos } from "@/lib/videoTree";
-import { IconEdit, IconTrash, IconArrowRight, IconFolder, IconPlus, IconHelp } from "@/components/icons";
+import { countVideos, filterVideoTree } from "@/lib/videoTree";
+import {
+  IconEdit,
+  IconTrash,
+  IconArrowRight,
+  IconFolder,
+  IconPlus,
+  IconHelp,
+  IconSearch,
+} from "@/components/icons";
 import { useRouter } from "next/navigation";
 
 const fetcher = (url) => api.get(url);
@@ -53,6 +61,15 @@ export default function CourseDetailPage({ params }) {
   const generalNotes = useMemo(() => (questions || []).filter((q) => !q.video), [questions]);
 
   const videoCount = videoData?.tree ? countVideos(videoData.tree) : 0;
+
+  const [videoSearch, setVideoSearch] = useState("");
+  const isSearchingVideos = Boolean(videoSearch.trim());
+  const filteredTree = useMemo(() => {
+    if (!videoData?.tree) return null;
+    if (!isSearchingVideos) return videoData.tree;
+    return filterVideoTree(videoData.tree, videoSearch) || { videos: [], folders: [] };
+  }, [videoData, videoSearch, isSearchingVideos]);
+  const filteredVideoCount = filteredTree ? countVideos(filteredTree) : 0;
 
   async function handleDeleteCourse() {
     setCourseDeleteLoading(true);
@@ -127,10 +144,25 @@ export default function CourseDetailPage({ params }) {
         }
       />
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
         <h2 className="font-display text-lg text-cream-100">
           Videos <span className="text-cream-500 text-sm font-sans">({videoCount})</span>
         </h2>
+        {videoCount > 0 && (
+          <div className="relative w-full sm:w-64">
+            <IconSearch
+              width={15}
+              height={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-cream-500"
+            />
+            <input
+              className="field-input pl-9"
+              placeholder="Search videos…"
+              value={videoSearch}
+              onChange={(e) => setVideoSearch(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       {videosLoading ? (
@@ -148,8 +180,18 @@ export default function CourseDetailPage({ params }) {
             Refresh
           </button>
         </div>
+      ) : filteredVideoCount === 0 ? (
+        <div className="card p-8 text-center">
+          <IconSearch width={24} height={24} className="text-cream-500 mx-auto mb-3" />
+          <p className="text-cream-300 text-sm">No videos match &ldquo;{videoSearch.trim()}&rdquo;.</p>
+        </div>
       ) : (
-        <VideoFolderTree tree={videoData.tree} courseId={id} noteCounts={noteCounts} />
+        <VideoFolderTree
+          tree={filteredTree}
+          courseId={id}
+          noteCounts={noteCounts}
+          forceOpen={isSearchingVideos}
+        />
       )}
 
       {!videosLoading && (

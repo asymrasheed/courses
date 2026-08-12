@@ -9,6 +9,7 @@ import NoteForm from "@/components/NoteForm";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import QuestionCard from "@/components/QuestionCard";
 import VideoPlayer from "@/components/VideoPlayer";
+import VideoNavPanel from "@/components/VideoNavPanel";
 import { api } from "@/lib/api";
 import { formatTime } from "@/lib/time";
 import { flattenVideoTree } from "@/lib/videoTree";
@@ -29,6 +30,7 @@ export default function WatchPage({ params }) {
 
   const { data: course } = useSWR(`/api/courses/${id}`, fetcher);
   const { data: videoData } = useSWR(`/api/courses/${id}/videos`, fetcher);
+  const { data: allNotes } = useSWR(`/api/questions?course=${id}`, fetcher);
   const {
     data: notes,
     isLoading: notesLoading,
@@ -37,6 +39,12 @@ export default function WatchPage({ params }) {
     videoPath ? `/api/questions?course=${id}&video=${encodeURIComponent(videoPath)}` : null,
     fetcher
   );
+
+  const noteCounts = useMemo(() => {
+    const map = new Map();
+    (allNotes || []).forEach((n) => map.set(n.video, (map.get(n.video) || 0) + 1));
+    return map;
+  }, [allNotes]);
 
   const videoRef = useRef(null);
   const [autoAdvance, setAutoAdvance] = useState(false);
@@ -151,6 +159,16 @@ export default function WatchPage({ params }) {
               onEnded={handleEnded}
               autoAdvance={autoAdvance}
               onToggleAutoAdvance={() => setAutoAdvance((a) => !a)}
+              navOverlay={
+                videoData?.tree && (
+                  <VideoNavPanel
+                    tree={videoData.tree}
+                    currentPath={videoPath}
+                    noteCounts={noteCounts}
+                    onSelect={goTo}
+                  />
+                )
+              }
             />
           )}
 

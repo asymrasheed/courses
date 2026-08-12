@@ -27,8 +27,9 @@ function VideoRow({ video, depth, courseId, count }) {
   );
 }
 
-function FolderRow({ node, depth, courseId, noteCounts }) {
+function FolderRow({ node, depth, courseId, noteCounts, forceOpen }) {
   const [open, setOpen] = useState(false);
+  const effectiveOpen = forceOpen || open;
   const total = countVideos(node);
 
   return (
@@ -42,7 +43,7 @@ function FolderRow({ node, depth, courseId, noteCounts }) {
         <IconArrowRight
           width={11}
           height={11}
-          className={`text-cream-500 shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
+          className={`text-cream-500 shrink-0 transition-transform ${effectiveOpen ? "rotate-90" : ""}`}
         />
         <IconFolder width={14} height={14} className="text-cream-500 shrink-0" />
         <span className="flex-1 min-w-0 truncate text-cream-200 text-sm">{node.name}</span>
@@ -51,7 +52,7 @@ function FolderRow({ node, depth, courseId, noteCounts }) {
         </span>
       </button>
 
-      {open && (
+      {effectiveOpen && (
         <div>
           {node.folders.map((folder) => (
             <FolderRow
@@ -60,6 +61,7 @@ function FolderRow({ node, depth, courseId, noteCounts }) {
               depth={depth + 1}
               courseId={courseId}
               noteCounts={noteCounts}
+              forceOpen={forceOpen}
             />
           ))}
           {node.videos.map((video) => (
@@ -79,15 +81,23 @@ function FolderRow({ node, depth, courseId, noteCounts }) {
 
 // Mirrors the real public/courses/<folder> directory structure: folders are
 // collapsed by default so a course with many sections doesn't dump every
-// video onto the page at once.
-export default function VideoFolderTree({ tree, courseId, noteCounts }) {
+// video onto the page at once. Pass `forceOpen` (e.g. while a search filter
+// is active) to expand every folder regardless of its own toggle state.
+export default function VideoFolderTree({ tree, courseId, noteCounts, forceOpen = false }) {
   return (
     <div className="card p-2">
       {tree.videos.map((video) => (
         <VideoRow key={video.path} video={video} depth={0} courseId={courseId} count={noteCounts.get(video.path)} />
       ))}
       {tree.folders.map((folder) => (
-        <FolderRow key={folder.path} node={folder} depth={0} courseId={courseId} noteCounts={noteCounts} />
+        <FolderRow
+          key={folder.path}
+          node={folder}
+          depth={0}
+          courseId={courseId}
+          noteCounts={noteCounts}
+          forceOpen={forceOpen}
+        />
       ))}
     </div>
   );
