@@ -226,7 +226,7 @@ export default function CourseDetailPage({ params }) {
         onClose={() => setDeletingNote(null)}
         onConfirm={handleDeleteNote}
         title="Delete note"
-        description="This note and its answer will be permanently removed."
+        description="This note and its content will be permanently removed."
         loading={noteDeleteLoading}
       />
     </div>

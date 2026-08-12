@@ -209,10 +209,40 @@ a {
   }
   .prose-content ul,
   .prose-content ol {
-    margin: 0.4em 0 0.6em 1.4em;
+    margin: 0.4em 0 0.6em;
+    padding-left: 1.3em;
+    list-style-position: outside;
+  }
+  .prose-content ul {
+    list-style-type: disc;
+  }
+  .prose-content ul ul {
+    list-style-type: circle;
+  }
+  .prose-content ul ul ul {
+    list-style-type: square;
+  }
+  .prose-content ol {
+    list-style-type: decimal;
+  }
+  .prose-content ol ol {
+    list-style-type: lower-alpha;
+  }
+  .prose-content ol ol ol {
+    list-style-type: lower-roman;
   }
   .prose-content li {
     margin-bottom: 0.25em;
+  }
+  .prose-content li::marker {
+    color: var(--color-gold-300);
+  }
+  .prose-content li > p {
+    margin-bottom: 0.25em;
+  }
+  .prose-content li > ul,
+  .prose-content li > ol {
+    margin: 0.25em 0;
   }
   .prose-content a {
     color: var(--color-gold-300);

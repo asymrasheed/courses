@@ -13,8 +13,8 @@ const QuestionSchema = new mongoose.Schema(
     video: { type: String, default: null },
     // Seconds into the video where this note applies. Null when there's no video.
     timestamp: { type: Number, default: null, min: 0 },
-    question: { type: String, required: true }, // rich text HTML
-    answer: { type: String, required: true }, // rich text HTML
+    title: { type: String, required: true }, // plain text
+    notes: { type: String, required: true }, // rich text HTML
   },
   { timestamps: true }
 );

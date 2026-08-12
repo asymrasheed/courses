@@ -25,7 +25,7 @@ export default async function DashboardHome() {
   const stats = [
     { label: "Categories", value: categoryCount, href: "/dashboard/categories", accent: "gold" },
     { label: "Courses", value: courseCount, href: "/dashboard/courses", accent: "teal" },
-    { label: "Questions", value: questionCount, href: "/dashboard/questions", accent: "rose" },
+    { label: "Notes", value: questionCount, href: "/dashboard/notes", accent: "rose" },
   ];
 
   return (

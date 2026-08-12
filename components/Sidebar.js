@@ -10,7 +10,7 @@ const NAV = [
   { href: "/dashboard", label: "Overview", icon: IconGrid, exact: true },
   { href: "/dashboard/categories", label: "Categories", icon: IconLayers },
   { href: "/dashboard/courses", label: "Courses", icon: IconBook },
-  { href: "/dashboard/questions", label: "Questions", icon: IconHelp },
+  { href: "/dashboard/notes", label: "Notes", icon: IconHelp },
 ];
 
 export default function Sidebar({ email }) {

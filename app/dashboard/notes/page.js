@@ -20,7 +20,7 @@ function videoLabel(path) {
   return path.replace(/\.[^./]+$/, "").split("/").join(" › ");
 }
 
-export default function QuestionsExplorerPage() {
+export default function NotesExplorerPage() {
   const { data: categories } = useSWR("/api/categories", fetcher);
   const { data: questions, isLoading } = useSWR("/api/questions", fetcher);
 
@@ -34,7 +34,7 @@ export default function QuestionsExplorerPage() {
     const filtered = questions.filter((q) => {
       if (!q.course?.category) return false;
       if (categorySlug && q.course.category.slug !== categorySlug) return false;
-      if (term && !plainText(q.question).includes(term) && !plainText(q.answer).includes(term)) {
+      if (term && !q.title.toLowerCase().includes(term) && !plainText(q.notes).includes(term)) {
         return false;
       }
       return true;
@@ -89,7 +89,7 @@ export default function QuestionsExplorerPage() {
           />
           <input
             className="field-input pl-9"
-            placeholder="Search questions & answers…"
+            placeholder="Search titles & notes…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

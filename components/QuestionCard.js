@@ -17,10 +17,7 @@ export default function QuestionCard({ question, index, onEdit, onDelete, meta }
         </span>
         <div className="flex-1 min-w-0">
           {meta}
-          <div
-            className="prose-content text-cream-100 [&_p]:mb-0 font-medium"
-            dangerouslySetInnerHTML={{ __html: question.question }}
-          />
+          <p className="text-cream-100 font-medium">{question.title}</p>
         </div>
         <IconArrowRight
           width={14}
@@ -33,7 +30,7 @@ export default function QuestionCard({ question, index, onEdit, onDelete, meta }
         <div className="px-5 pb-5 pl-11">
           <div
             className="prose-content border-l-2 border-gold-400/40 pl-4"
-            dangerouslySetInnerHTML={{ __html: question.answer }}
+            dangerouslySetInnerHTML={{ __html: question.notes }}
           />
           {(onEdit || onDelete) && (
             <div className="flex gap-2 mt-4">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import toast from "react-hot-toast";
-import QuestionModal from "@/components/QuestionModal";
+import NoteForm from "@/components/NoteForm";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import QuestionCard from "@/components/QuestionCard";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -177,12 +177,32 @@ export default function WatchPage({ params }) {
             <h2 className="font-display text-lg text-cream-100">
               Notes <span className="text-cream-500 text-sm font-sans">({notes?.length || 0})</span>
             </h2>
-            <button className="btn btn-primary !py-1.5 !px-3 text-xs" onClick={openAddNote}>
-              <IconPlus width={14} height={14} /> Add note
-            </button>
+            {!noteModalOpen && (
+              <button className="btn btn-primary !py-1.5 !px-3 text-xs" onClick={openAddNote}>
+                <IconPlus width={14} height={14} /> Add note
+              </button>
+            )}
           </div>
 
-          {notesLoading ? (
+          {noteModalOpen ? (
+            <div className="card p-5">
+              <h3 className="font-display text-base text-cream-100 mb-4">
+                {editingNote ? "Edit note" : "New note"}
+              </h3>
+              <NoteForm
+                courseId={id}
+                courseFolder={course?.folder}
+                video={videoPath}
+                question={editingNote}
+                getCurrentTime={getCurrentTime}
+                onSaved={() => {
+                  mutateNotes();
+                  setNoteModalOpen(false);
+                }}
+                onCancel={() => setNoteModalOpen(false)}
+              />
+            </div>
+          ) : notesLoading ? (
             <p className="text-cream-500 text-sm">Loading…</p>
           ) : notes.length === 0 ? (
             <div className="card p-8 text-center">
@@ -228,23 +248,12 @@ export default function WatchPage({ params }) {
         </div>
       </div>
 
-      <QuestionModal
-        open={noteModalOpen}
-        onClose={() => setNoteModalOpen(false)}
-        courseId={id}
-        courseFolder={course?.folder}
-        video={videoPath}
-        question={editingNote}
-        getCurrentTime={getCurrentTime}
-        onSaved={mutateNotes}
-      />
-
       <ConfirmDialog
         open={Boolean(deletingNote)}
         onClose={() => setDeletingNote(null)}
         onConfirm={handleDeleteNote}
         title="Delete note"
-        description="This note and its answer will be permanently removed."
+        description="This note and its content will be permanently removed."
         loading={deleteLoading}
       />
     </div>

@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
 
   if (course) filter.course = course;
   if (video !== undefined) filter.video = video || null;
-  if (search) filter.question = { $regex: search, $options: "i" };
+  if (search) filter.title = { $regex: search, $options: "i" };
 
   let questions = await Question.find(filter)
     .populate({ path: "course", populate: { path: "category" } })
@@ -33,11 +33,11 @@ router.get("/", async (req, res) => {
 
 // POST /api/questions — create a note, optionally anchored to a video + timestamp
 router.post("/", async (req, res) => {
-  const { course, video, timestamp, question, answer } = req.body || {};
-  if (!course || !question || !answer) {
+  const { course, video, timestamp, title, notes } = req.body || {};
+  if (!course || !title || !notes) {
     return res
       .status(400)
-      .json({ error: "course, question and answer are required" });
+      .json({ error: "course, title and notes are required" });
   }
 
   const courseDoc = await Course.findById(course);
@@ -55,23 +55,23 @@ router.post("/", async (req, res) => {
     course,
     video: video || null,
     timestamp: seconds,
-    question,
-    answer,
+    title,
+    notes,
   });
 
-  await syncQuestionUploads(doc._id, [question, answer]);
+  await syncQuestionUploads(doc._id, [notes]);
 
   res.status(201).json(doc);
 });
 
 // PUT /api/questions/:id — update
 router.put("/:id", async (req, res) => {
-  const { question, answer, timestamp } = req.body || {};
+  const { title, notes, timestamp } = req.body || {};
   const doc = await Question.findById(req.params.id);
   if (!doc) return res.status(404).json({ error: "Question not found" });
 
-  if (question !== undefined) doc.question = question;
-  if (answer !== undefined) doc.answer = answer;
+  if (title !== undefined) doc.title = title;
+  if (notes !== undefined) doc.notes = notes;
   if (timestamp !== undefined && doc.video) {
     const seconds = Number(timestamp);
     if (Number.isNaN(seconds) || seconds < 0) {
@@ -81,7 +81,7 @@ router.put("/:id", async (req, res) => {
   }
 
   await doc.save();
-  await syncQuestionUploads(doc._id, [doc.question, doc.answer]);
+  await syncQuestionUploads(doc._id, [doc.notes]);
 
   res.json(doc);
 });
