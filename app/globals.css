@@ -1,49 +1,256 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@theme {
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-archivo);
 
-html {
-  height: 100%;
-}
+  --color-ink-950: #0d0b08;
+  --color-ink-900: #17140e;
+  --color-ink-800: #1f1b13;
+  --color-ink-700: #2a2418;
+  --color-ink-600: #3a3120;
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  --color-cream-100: #f8f3e7;
+  --color-cream-200: #ece3cf;
+  --color-cream-300: #cec3a9;
+  --color-cream-500: #948a72;
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-gold-300: #f4c574;
+  --color-gold-400: #e9a23b;
+  --color-gold-500: #cf8a26;
+
+  --color-clay-400: #d9704f;
+  --color-clay-500: #c05939;
+
+  --color-sage-400: #7f9c72;
+  --color-dusk-400: #6382a1;
+  --color-plum-400: #a172a0;
+  --color-teal-400: #4f9e94;
+  --color-rose-400: #c97686;
+  --color-olive-400: #a49a52;
+
+  --radius-md: 0.625rem;
+  --radius-lg: 0.9rem;
+  --radius-xl: 1.4rem;
+
+  --shadow-card: 0 1px 0 0 rgba(248, 243, 231, 0.04) inset, 0 12px 30px -12px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-ink-900);
+  color: var(--color-cream-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* subtle grain so the flat ink background doesn't feel dead */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.35'/></svg>");
+}
+
+#__next,
+main,
+.app-shell {
+  position: relative;
+  z-index: 1;
 }
 
 a {
   color: inherit;
-  text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+::selection {
+  background: var(--color-gold-400);
+  color: var(--color-ink-950);
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-600);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cream-500);
+}
+
+@layer components {
+  .card {
+    background: var(--color-ink-800);
+    border: 1px solid rgba(248, 243, 231, 0.07);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
   }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    padding: 0.55rem 1.1rem;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--color-gold-400);
+    color: var(--color-ink-950);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-gold-300);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-cream-200);
+    border: 1px solid rgba(248, 243, 231, 0.14);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-gold-400);
+    color: var(--color-gold-300);
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--color-clay-400);
+    border: 1px solid rgba(217, 112, 79, 0.35);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: rgba(217, 112, 79, 0.12);
+    border-color: var(--color-clay-400);
+  }
+
+  .field-input,
+  .field-textarea,
+  .field-select {
+    width: 100%;
+    background: var(--color-ink-900);
+    border: 1px solid rgba(248, 243, 231, 0.12);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.85rem;
+    color: var(--color-cream-100);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease;
+  }
+  .field-input::placeholder,
+  .field-textarea::placeholder {
+    color: var(--color-cream-500);
+  }
+  .field-input:focus,
+  .field-textarea:focus,
+  .field-select:focus {
+    outline: none;
+    border-color: var(--color-gold-400);
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-cream-500);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(248, 243, 231, 0.06);
+    color: var(--color-cream-200);
+  }
+
+  /* rich text rendering (question/answer content) */
+  .prose-content {
+    color: var(--color-cream-200);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+  .prose-content p {
+    margin-bottom: 0.6em;
+  }
+  .prose-content ul,
+  .prose-content ol {
+    margin: 0.4em 0 0.6em 1.4em;
+  }
+  .prose-content li {
+    margin-bottom: 0.25em;
+  }
+  .prose-content a {
+    color: var(--color-gold-300);
+    text-decoration: underline;
+  }
+  .prose-content code {
+    background: rgba(248, 243, 231, 0.08);
+    padding: 0.1em 0.4em;
+    border-radius: 0.3em;
+    font-size: 0.85em;
+  }
+  .prose-content strong {
+    color: var(--color-cream-100);
+  }
+
+  .rte-editable {
+    outline: none;
+  }
+  .rte-editable p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-cream-500);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
