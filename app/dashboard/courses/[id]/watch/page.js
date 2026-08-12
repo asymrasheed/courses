@@ -132,23 +132,6 @@ export default function WatchPage({ params }) {
         >
           <IconArrowRight width={13} height={13} className="rotate-180" /> {course?.title || "Course"}
         </Link>
-
-        <div className="flex items-center gap-2">
-          <button
-            className="btn btn-ghost !py-1.5 !px-3 text-xs"
-            disabled={!prevVideo}
-            onClick={() => prevVideo && goTo(prevVideo)}
-          >
-            Previous
-          </button>
-          <button
-            className="btn btn-ghost !py-1.5 !px-3 text-xs"
-            disabled={!nextVideo}
-            onClick={() => nextVideo && goTo(nextVideo)}
-          >
-            Next
-          </button>
-        </div>
       </div>
 
       <h1 className="font-display text-xl text-cream-100 mb-1">{currentVideo?.name}</h1>
@@ -159,7 +142,7 @@ export default function WatchPage({ params }) {
       )}
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        <div className="w-full lg:w-[60%]">
+        <div className="w-full lg:w-[60%] lg:sticky lg:top-6">
           {currentVideo && (
             <VideoPlayer
               ref={videoRef}
@@ -170,6 +153,23 @@ export default function WatchPage({ params }) {
               onToggleAutoAdvance={() => setAutoAdvance((a) => !a)}
             />
           )}
+
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <button
+              className="btn btn-ghost !py-1.5 !px-3 text-xs"
+              disabled={!prevVideo}
+              onClick={() => prevVideo && goTo(prevVideo)}
+            >
+              <IconArrowRight width={13} height={13} className="rotate-180" /> Previous
+            </button>
+            <button
+              className="btn btn-ghost !py-1.5 !px-3 text-xs"
+              disabled={!nextVideo}
+              onClick={() => nextVideo && goTo(nextVideo)}
+            >
+              Next <IconArrowRight width={13} height={13} />
+            </button>
+          </div>
         </div>
 
         <div className="w-full lg:w-[40%]">
