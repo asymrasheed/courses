@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { IconFolder, IconPlay, IconArrowRight } from "@/components/icons";
 import { countVideos } from "@/lib/videoTree";
+import VideoStatusSelect from "@/components/VideoStatusSelect";
 
 const INDENT = 18;
 
-function VideoRow({ video, depth, courseId, count }) {
+function VideoRow({ video, depth, courseId, count, status, onStatusChange }) {
   return (
     <Link
       href={`/dashboard/courses/${courseId}/watch?v=${encodeURIComponent(video.path)}`}
@@ -23,11 +24,15 @@ function VideoRow({ video, depth, courseId, count }) {
           {count} note{count === 1 ? "" : "s"}
         </span>
       )}
+      <VideoStatusSelect
+        status={status}
+        onChange={(next) => onStatusChange(video.path, next)}
+      />
     </Link>
   );
 }
 
-function FolderRow({ node, depth, courseId, noteCounts, forceOpen }) {
+function FolderRow({ node, depth, courseId, noteCounts, statuses, onStatusChange, forceOpen }) {
   const [open, setOpen] = useState(false);
   const effectiveOpen = forceOpen || open;
   const total = countVideos(node);
@@ -61,6 +66,8 @@ function FolderRow({ node, depth, courseId, noteCounts, forceOpen }) {
               depth={depth + 1}
               courseId={courseId}
               noteCounts={noteCounts}
+              statuses={statuses}
+              onStatusChange={onStatusChange}
               forceOpen={forceOpen}
             />
           ))}
@@ -71,6 +78,8 @@ function FolderRow({ node, depth, courseId, noteCounts, forceOpen }) {
               depth={depth + 1}
               courseId={courseId}
               count={noteCounts.get(video.path)}
+              status={statuses.get(video.path)}
+              onStatusChange={onStatusChange}
             />
           ))}
         </div>
@@ -83,11 +92,26 @@ function FolderRow({ node, depth, courseId, noteCounts, forceOpen }) {
 // collapsed by default so a course with many sections doesn't dump every
 // video onto the page at once. Pass `forceOpen` (e.g. while a search filter
 // is active) to expand every folder regardless of its own toggle state.
-export default function VideoFolderTree({ tree, courseId, noteCounts, forceOpen = false }) {
+export default function VideoFolderTree({
+  tree,
+  courseId,
+  noteCounts,
+  statuses,
+  onStatusChange,
+  forceOpen = false,
+}) {
   return (
     <div className="card p-2">
       {tree.videos.map((video) => (
-        <VideoRow key={video.path} video={video} depth={0} courseId={courseId} count={noteCounts.get(video.path)} />
+        <VideoRow
+          key={video.path}
+          video={video}
+          depth={0}
+          courseId={courseId}
+          count={noteCounts.get(video.path)}
+          status={statuses.get(video.path)}
+          onStatusChange={onStatusChange}
+        />
       ))}
       {tree.folders.map((folder) => (
         <FolderRow
@@ -96,6 +120,8 @@ export default function VideoFolderTree({ tree, courseId, noteCounts, forceOpen 
           depth={0}
           courseId={courseId}
           noteCounts={noteCounts}
+          statuses={statuses}
+          onStatusChange={onStatusChange}
           forceOpen={forceOpen}
         />
       ))}

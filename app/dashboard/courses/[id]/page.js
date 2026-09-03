@@ -42,6 +42,10 @@ export default function CourseDetailPage({ params }) {
     `/api/questions?course=${id}`,
     fetcher
   );
+  const { data: statusData, mutate: mutateStatuses } = useSWR(
+    `/api/courses/${id}/video-status`,
+    fetcher
+  );
 
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState(false);
@@ -59,6 +63,19 @@ export default function CourseDetailPage({ params }) {
   }, [questions]);
 
   const generalNotes = useMemo(() => (questions || []).filter((q) => !q.video), [questions]);
+
+  const statuses = useMemo(() => new Map(Object.entries(statusData || {})), [statusData]);
+
+  async function handleStatusChange(videoPath, status) {
+    mutateStatuses((prev) => ({ ...(prev || {}), [videoPath]: status }), false);
+    try {
+      await api.put(`/api/courses/${id}/video-status`, { video: videoPath, status });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      mutateStatuses();
+    }
+  }
 
   const videoCount = videoData?.tree ? countVideos(videoData.tree) : 0;
 
@@ -190,6 +207,8 @@ export default function CourseDetailPage({ params }) {
           tree={filteredTree}
           courseId={id}
           noteCounts={noteCounts}
+          statuses={statuses}
+          onStatusChange={handleStatusChange}
           forceOpen={isSearchingVideos}
         />
       )}

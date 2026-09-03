@@ -4,6 +4,7 @@ const path = require("path");
 const Course = require("../../models/Course");
 const Category = require("../../models/Category");
 const Question = require("../../models/Question");
+const { VideoStatus, STATUSES } = require("../../models/VideoStatus");
 const { makeUniqueSlug } = require("../../lib/slug");
 const { listCourseVideos } = require("../../lib/videos");
 
@@ -58,6 +59,35 @@ router.get("/:id/videos", async (req, res) => {
   const folder = course.folder || course.slug;
   const tree = await listCourseVideos(folder);
   res.json({ folder, tree });
+});
+
+// GET /api/courses/:id/video-status — map of video path -> status ("pending"
+// videos with no record yet are simply absent; the client defaults those).
+router.get("/:id/video-status", async (req, res) => {
+  const statuses = await VideoStatus.find({ course: req.params.id }).lean();
+  const map = {};
+  statuses.forEach((s) => {
+    map[s.video] = s.status;
+  });
+  res.json(map);
+});
+
+// PUT /api/courses/:id/video-status — set (or change, with no restrictions
+// on which transitions are allowed) a single video's status.
+router.put("/:id/video-status", async (req, res) => {
+  const { video, status } = req.body || {};
+  if (!video) return res.status(400).json({ error: "Video path is required" });
+  if (!STATUSES.includes(status)) {
+    return res.status(400).json({ error: `Status must be one of: ${STATUSES.join(", ")}` });
+  }
+
+  await VideoStatus.findOneAndUpdate(
+    { course: req.params.id, video },
+    { status },
+    { upsert: true }
+  );
+
+  res.json({ video, status });
 });
 
 // POST /api/courses — create
@@ -122,6 +152,7 @@ router.delete("/:id", async (req, res) => {
   const course = await Course.findByIdAndDelete(req.params.id);
   if (!course) return res.status(404).json({ error: "Course not found" });
   await Question.deleteMany({ course: course._id });
+  await VideoStatus.deleteMany({ course: course._id });
   res.status(204).end();
 });
 

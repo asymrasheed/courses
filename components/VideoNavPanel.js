@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { IconFolder, IconPlay, IconArrowRight, IconMenu, IconX } from "@/components/icons";
 import { countVideos, folderContainsPath } from "@/lib/videoTree";
+import VideoStatusSelect from "@/components/VideoStatusSelect";
 
 const INDENT = 16;
 
-function VideoOption({ video, depth, currentPath, noteCounts, onSelect }) {
+function VideoOption({ video, depth, currentPath, noteCounts, statuses, onStatusChange, onSelect }) {
   const active = video.path === currentPath;
   const count = noteCounts?.get(video.path) || 0;
 
@@ -28,11 +29,15 @@ function VideoOption({ video, depth, currentPath, noteCounts, onSelect }) {
         {video.name}
       </span>
       {count > 0 && <span className="badge shrink-0">{count}</span>}
+      <VideoStatusSelect
+        status={statuses?.get(video.path)}
+        onChange={(next) => onStatusChange(video.path, next)}
+      />
     </button>
   );
 }
 
-function FolderOption({ node, depth, currentPath, noteCounts, onSelect }) {
+function FolderOption({ node, depth, currentPath, noteCounts, statuses, onStatusChange, onSelect }) {
   const [open, setOpen] = useState(() => folderContainsPath(node, currentPath));
   const total = countVideos(node);
 
@@ -65,6 +70,8 @@ function FolderOption({ node, depth, currentPath, noteCounts, onSelect }) {
               depth={depth + 1}
               currentPath={currentPath}
               noteCounts={noteCounts}
+              statuses={statuses}
+              onStatusChange={onStatusChange}
               onSelect={onSelect}
             />
           ))}
@@ -75,6 +82,8 @@ function FolderOption({ node, depth, currentPath, noteCounts, onSelect }) {
               depth={depth + 1}
               currentPath={currentPath}
               noteCounts={noteCounts}
+              statuses={statuses}
+              onStatusChange={onStatusChange}
               onSelect={onSelect}
             />
           ))}
@@ -89,7 +98,7 @@ function FolderOption({ node, depth, currentPath, noteCounts, onSelect }) {
 // any video in the course can be jumped to without leaving the player.
 // Rendered as `navOverlay` inside VideoPlayer's own relative video box, so
 // both the button and the drawer stay bounded to the video's frame.
-export default function VideoNavPanel({ tree, currentPath, noteCounts, onSelect }) {
+export default function VideoNavPanel({ tree, currentPath, noteCounts, statuses, onStatusChange, onSelect }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -137,6 +146,8 @@ export default function VideoNavPanel({ tree, currentPath, noteCounts, onSelect 
               depth={0}
               currentPath={currentPath}
               noteCounts={noteCounts}
+              statuses={statuses}
+              onStatusChange={onStatusChange}
               onSelect={handleSelect}
             />
           ))}
@@ -147,6 +158,8 @@ export default function VideoNavPanel({ tree, currentPath, noteCounts, onSelect 
               depth={0}
               currentPath={currentPath}
               noteCounts={noteCounts}
+              statuses={statuses}
+              onStatusChange={onStatusChange}
               onSelect={handleSelect}
             />
           ))}

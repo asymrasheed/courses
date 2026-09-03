@@ -198,6 +198,28 @@ a {
     color: var(--color-cream-200);
   }
 
+  .status-select {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(248, 243, 231, 0.06);
+    border: 1px solid currentColor;
+    cursor: pointer;
+  }
+  .status-select:focus {
+    outline: none;
+  }
+  .status-select-md {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.7rem;
+  }
+  .status-select option {
+    background: var(--color-ink-900);
+    color: var(--color-cream-100);
+  }
+
   /* rich text rendering (question/answer content) */
   .prose-content {
     color: var(--color-cream-200);

@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import QuestionCard from "@/components/QuestionCard";
 import VideoPlayer from "@/components/VideoPlayer";
 import VideoNavPanel from "@/components/VideoNavPanel";
+import VideoStatusSelect from "@/components/VideoStatusSelect";
 import { api } from "@/lib/api";
 import { formatTime } from "@/lib/time";
 import { flattenVideoTree } from "@/lib/videoTree";
@@ -31,6 +32,10 @@ export default function WatchPage({ params }) {
   const { data: course } = useSWR(`/api/courses/${id}`, fetcher);
   const { data: videoData } = useSWR(`/api/courses/${id}/videos`, fetcher);
   const { data: allNotes } = useSWR(`/api/questions?course=${id}`, fetcher);
+  const { data: statusData, mutate: mutateStatuses } = useSWR(
+    `/api/courses/${id}/video-status`,
+    fetcher
+  );
   const {
     data: notes,
     isLoading: notesLoading,
@@ -45,6 +50,19 @@ export default function WatchPage({ params }) {
     (allNotes || []).forEach((n) => map.set(n.video, (map.get(n.video) || 0) + 1));
     return map;
   }, [allNotes]);
+
+  const statuses = useMemo(() => new Map(Object.entries(statusData || {})), [statusData]);
+
+  async function handleStatusChange(targetPath, status) {
+    mutateStatuses((prev) => ({ ...(prev || {}), [targetPath]: status }), false);
+    try {
+      await api.put(`/api/courses/${id}/video-status`, { video: targetPath, status });
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      mutateStatuses();
+    }
+  }
 
   const videoRef = useRef(null);
   const [autoAdvance, setAutoAdvance] = useState(false);
@@ -142,7 +160,16 @@ export default function WatchPage({ params }) {
         </Link>
       </div>
 
-      <h1 className="font-display text-xl text-cream-100 mb-1">{currentVideo?.name}</h1>
+      <div className="flex items-start justify-between gap-3 mb-1 flex-wrap">
+        <h1 className="font-display text-xl text-cream-100">{currentVideo?.name}</h1>
+        {currentVideo && (
+          <VideoStatusSelect
+            status={statuses.get(currentVideo.path)}
+            onChange={(status) => handleStatusChange(currentVideo.path, status)}
+            size="md"
+          />
+        )}
+      </div>
       {currentVideo?.section && (
         <p className="text-cream-500 text-sm mb-5 flex items-center gap-1.5">
           <IconFolder width={13} height={13} /> {currentVideo.section}
@@ -165,6 +192,8 @@ export default function WatchPage({ params }) {
                     tree={videoData.tree}
                     currentPath={videoPath}
                     noteCounts={noteCounts}
+                    statuses={statuses}
+                    onStatusChange={handleStatusChange}
                     onSelect={goTo}
                   />
                 )
